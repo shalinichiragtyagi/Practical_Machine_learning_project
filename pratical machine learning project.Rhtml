@@ -1,0 +1,96 @@
+<html>
+
+<head>
+<title>Title</title>
+</head>
+
+<body>
+
+<p>The goal of this analysis is to predict the manner in which individuals performed an exercise. Six participants were asked to perform barbell lifts correctly and incorrectly in 5 different ways. In the "classe" variable in the training set an "A" corresponds to the correct execution of the exercise, while the other 4 classes (B through E) correspond to common mistakes. By using data from accelerometers on the belt, forearm, arm, and dumbell we aim to predict which class the observation falls in:</p>
+
+<!--begin.rcode, echo=TRUE
+ setwd("B:/Coursera")
+training<-read.csv("pml-training.csv")
+testing<-read.csv("pml-testing.csv")
+end.rcode-->
+
+<!--begin.rcode, echo=TRUE
+library(caret)
+library(rattle)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+end.rcode-->
+
+<p> Cleaning up Training Data Set:</p>
+
+<!--begin.rcode, echo=TRUE
+training <- training[, colSums(is.na(training)) == 0]
+testing <- testing[, colSums(is.na(testing)) == 0]
+end.rcode-->
+
+<!--begin.rcode, echo=TRUE
+trainData <- training[, -c(1:7)]
+testData <- testing[, -c(1:7)]
+end.rcode-->
+ <p> Data spliting:</p>
+ 
+<!--begin.rcode, echo=TRUE
+ set.seed(7826) 
+inTrain <- createDataPartition(trainData$classe, p = 0.7, list = FALSE)
+train <- trainData[inTrain, ]
+valid <- trainData[-inTrain, ]
+end.rcode-->
+
+<p> Prediction Algorithms:</p>
+<!--begin.rcode, echo=TRUE
+control <- trainControl(method = "cv", number = 5)
+fit_rpart <- train(classe ~ ., data = train, method = "rpart", 
+                   trControl = control)
+print(fit_rpart, digits = 4)
+end.rcode-->
+
+
+<!--begin.rcode, echo=TRUE
+fancyRpartPlot(fit_rpart$finalModel)
+end.rcode-->
+
+<!--begin.rcode, echo=TRUE
+predict_rpart <- predict(fit_rpart, valid)
+# Show prediction result
+(conf_rpart <- confusionMatrix(valid$classe, predict_rpart))
+(accuracy_rpart <- conf_rpart$overall[1])
+end.rcode-->
+
+<p> Random forests:</p>
+
+<!--begin.rcode, echo=TRUE
+fit_rf <- train(classe ~ ., data = train, method = "rf", 
+                   trControl = control)
+print(fit_rf, digits = 4)
+end.rcode-->
+
+
+<!--begin.rcode,echo=TRUE
+# predict outcomes using validation set
+predict_rf <- predict(fit_rf, valid)
+# Show prediction result
+(conf_rf <- confusionMatrix(valid$classe, predict_rf))
+end.rcode-->
+
+<!--begin.rcode, echo=TRUE
+(accuracy_rf <- conf_rf$overall[1])
+(predict(fit_rf, testData))
+end.rcode-->
+
+
+
+
+
+
+
+
+
+
+
+
